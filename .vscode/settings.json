@@ -1,0 +1,14 @@
+{
+  "ruff.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "python.analysis.extraPaths": [
+    ".",
+    "~/miniforge3/pkgs",
+    "./externals/smiles-gpt"
+  ]
+}
