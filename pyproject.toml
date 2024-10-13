@@ -1,7 +1,7 @@
 [project]
 name = "npgpt"
 version = "0.1.0"
-description = "Natural product generation with chemical language models"
+description = "Natural product-Like compound generation with GPT-based chemical language models"
 authors = [{ name = "koh", email = "kohbanye@gmail.com" }]
 dependencies = [
     "torch>=2.4.1",
