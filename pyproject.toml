@@ -1,0 +1,35 @@
+[project]
+name = "npgpt"
+version = "0.1.0"
+description = "Natural product-Like compound generation with GPT-based chemical language models"
+authors = [{ name = "koh", email = "kohbanye@gmail.com" }]
+dependencies = [
+    "torch>=2.4.1",
+    "lightning>=2.4.0",
+    "pydantic>=2.9.2",
+    "transformers>=4.45.2",
+    "scikit-learn>=1.5.2",
+    "wandb>=0.18.3",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "mypy>=1.11.2",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/npgpt"]
+
+[[tool.mypy.overrides]]
+module = "transformers.*"
+ignore_missing_imports = true
