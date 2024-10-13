@@ -4,7 +4,14 @@ This is the implementation of the paper "NPGPT: Natural Product-Like Compound Ge
 
 ## Installation
 
-Clone the repository and run `rye sync` (you need to install [rye](https://rye.astral.sh/guide/installation/)).
+Install [Rye](https://rye.astral.sh/guide/installation/) if you haven't already. Then, clone the repository and install the dependencies.
+
+```shell
+git clone https://github.com/ohuelab/npgpt.git
+git submodule update --init --recursive
+cd npgpt
+rye sync
+```
 
 ## Fine-tuned Models
 
