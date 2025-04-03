@@ -11,3 +11,4 @@ wheels/
 
 wandb/
 lightning_logs/
+data/

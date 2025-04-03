@@ -39,6 +39,6 @@ def train(
 if __name__ == "__main__":
     config = SmilesGptConfig(batch_size=128)
     tokenizer_filename = "externals/smiles-gpt/checkpoints/benchmark-10m/tokenizer.json"
-    dataset_file = "externals/smiles-gpt/data/pubchem-10k.txt"
+    dataset_file = "data/coconut.smi"
 
     train(config, tokenizer_filename, dataset_file, logging=False)

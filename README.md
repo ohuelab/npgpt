@@ -4,13 +4,27 @@ This is the implementation of the paper "NPGPT: Natural Product-Like Compound Ge
 
 ## Installation
 
-Install [Rye](https://rye.astral.sh/guide/installation/) if you haven't already. Then, clone the repository and install the dependencies.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you haven't already. Then, clone the repository and install the dependencies.
 
 ```shell
 git clone https://github.com/ohuelab/npgpt.git
-git submodule update --init --recursive
 cd npgpt
-rye sync
+git submodule update --init --recursive
+uv sync
+```
+
+## Training
+
+First, download the training dataset from the following link and place it in the `data/` directory:
+
+- [Training Dataset (coconut.smi)](https://drive.google.com/file/d/1UUnBz_WdLnVvx40Fe4Sf-yAQ_1vTJc0x/view?usp=sharing)
+
+This dataset contains molecules from the [COCONUT](https://coconut.naturalproducts.net/) natural product library converted to SMILES format.
+
+To train the model, run the following command:
+
+```shell
+uv run python src/scripts/train.py
 ```
 
 ## Fine-tuned Models
