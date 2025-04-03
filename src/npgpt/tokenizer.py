@@ -27,7 +27,9 @@ def train_tokenizer(
     tokenizer.save_model(checkpoint_path)
     tokenizer.save(tokenizer_filename)
 
-    tokenizer = tokenizer.get_hf_tokenizer(tokenizer_filename, model_max_length=config.max_length)
+    tokenizer = tokenizer.get_hf_tokenizer(
+        tokenizer_filename, model_max_length=config.max_length
+    )
 
     return tokenizer
 
@@ -36,4 +38,6 @@ def get_tokenizer(
     config: SmilesGptConfig,
     tokenizer_filename: str = "tokenizer.json",
 ) -> PreTrainedTokenizerFast:
-    return SMILESBPETokenizer.get_hf_tokenizer(tokenizer_filename, model_max_length=config.max_length)
+    return SMILESBPETokenizer.get_hf_tokenizer(
+        tokenizer_filename, model_max_length=config.max_length
+    )

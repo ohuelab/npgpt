@@ -4,20 +4,26 @@ from transformers import DataCollatorForLanguageModeling, PreTrainedTokenizerFas
 
 
 class ClmDataset(Dataset):
-    def __init__(self, file_path: str, tokenizer: PreTrainedTokenizerFast, max_length: int = 512):
+    def __init__(
+        self, file_path: str, tokenizer: PreTrainedTokenizerFast, max_length: int = 512
+    ):
         self.file_path = file_path
         self.tokenizer = tokenizer
         self.max_length = max_length
 
         with open(file_path, "r") as f:
-            self.data = f.readlines()
+            self.data = f.read().splitlines()
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
         encoded = self.tokenizer(
-            self.data[idx], max_length=self.max_length, truncation=True, padding="max_length", return_tensors="pt"
+            self.data[idx],
+            max_length=self.max_length,
+            truncation=True,
+            padding="max_length",
+            return_tensors="pt",
         )
         return encoded.input_ids
 
@@ -43,7 +49,9 @@ class ClmDataModule(LightningDataModule):
 
     def setup(self, stage=None):
         dataset = ClmDataset(self.file_path, self.tokenizer, self.max_length)
-        self.train_dataset, self.val_dataset = random_split(dataset, [self.train_ratio, 1 - self.train_ratio])
+        self.train_dataset, self.val_dataset = random_split(
+            dataset, [self.train_ratio, 1 - self.train_ratio]
+        )
 
     def train_dataloader(self):
         return DataLoader(
@@ -56,5 +64,8 @@ class ClmDataModule(LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            self.val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=self.collate_fn
+            self.val_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
         )

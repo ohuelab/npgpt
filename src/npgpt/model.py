@@ -27,7 +27,9 @@ class SmilesGptModel(pl.LightningModule):
         )
         self.model = GPT2LMHeadModel(gpt2_config)
 
-    def forward(self, data: dict[str, torch.Tensor]) -> CausalLMOutputWithCrossAttentions:
+    def forward(
+        self, data: dict[str, torch.Tensor]
+    ) -> CausalLMOutputWithCrossAttentions:
         input_ids = data["input_ids"]
         labels = data["labels"]
         return self.model(input_ids, labels=labels)
