@@ -3,13 +3,13 @@ import torch
 from transformers import GPT2Config, GPT2LMHeadModel, PreTrainedTokenizerFast
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
-from npgpt.config import SmilesGptConfig
+from npgpt.config import SmilesGptTrainingConfig
 
 
 class SmilesGptModel(pl.LightningModule):
     def __init__(
         self,
-        config: SmilesGptConfig,
+        config: SmilesGptTrainingConfig,
         tokenizer: PreTrainedTokenizerFast,
     ):
         super().__init__()

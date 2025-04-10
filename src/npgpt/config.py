@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class SmilesGptConfig(BaseModel):
+class SmilesGptTrainingConfig(BaseModel):
     run_name: str | None = None
     project_name: str | None = "npgpt"
 
@@ -27,3 +27,11 @@ class SmilesGptConfig(BaseModel):
     n_layer: int = 6
     n_head: int = 12
     n_embd: int = 12 * 48
+
+
+class SmilesGptGenerationConfig(BaseModel):
+    num_samples: int = 5
+    max_length: int = 512
+    do_sample: bool = True
+    temperature: float = 0.7
+    top_p: float = 0.96

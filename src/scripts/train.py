@@ -1,11 +1,10 @@
 import pytorch_lightning as pl
+from npgpt import ClmDataModule, SmilesGptModel, SmilesGptTrainingConfig, get_tokenizer
 from pytorch_lightning.loggers import WandbLogger
-
-from npgpt import ClmDataModule, SmilesGptConfig, SmilesGptModel, get_tokenizer
 
 
 def train(
-    config: SmilesGptConfig,
+    config: SmilesGptTrainingConfig,
     tokenizer_filename: str,
     dataset_file: str,
     logging: bool = True,
@@ -37,7 +36,7 @@ def train(
 
 
 if __name__ == "__main__":
-    config = SmilesGptConfig(batch_size=128)
+    config = SmilesGptTrainingConfig(batch_size=128)
     tokenizer_filename = "externals/smiles-gpt/checkpoints/benchmark-10m/tokenizer.json"
     dataset_file = "data/coconut.smi"
 

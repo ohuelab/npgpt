@@ -1,10 +1,10 @@
-from .config import SmilesGptConfig
+from .config import SmilesGptTrainingConfig
 from .data import ClmDataModule, ClmDataset
 from .model import SmilesGptModel
-from .tokenizer import train_tokenizer, get_tokenizer
+from .tokenizer import get_tokenizer, train_tokenizer
 
 __all__ = [
-    "SmilesGptConfig",
+    "SmilesGptTrainingConfig",
     "ClmDataModule",
     "ClmDataset",
     "SmilesGptModel",

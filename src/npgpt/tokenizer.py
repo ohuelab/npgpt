@@ -5,11 +5,11 @@ sys.path.append("externals/smiles-gpt")
 from smiles_gpt.tokenization import SMILESAlphabet, SMILESBPETokenizer
 from transformers import PreTrainedTokenizerFast
 
-from npgpt.config import SmilesGptConfig
+from npgpt.config import SmilesGptTrainingConfig
 
 
 def train_tokenizer(
-    config: SmilesGptConfig,
+    config: SmilesGptTrainingConfig,
     tokenizer_train_files: str | list[str],
     checkpoint_path: str = "checkpoints",
     tokenizer_filename: str = "tokenizer.json",
@@ -35,7 +35,7 @@ def train_tokenizer(
 
 
 def get_tokenizer(
-    config: SmilesGptConfig,
+    config: SmilesGptTrainingConfig,
     tokenizer_filename: str = "tokenizer.json",
 ) -> PreTrainedTokenizerFast:
     return SMILESBPETokenizer.get_hf_tokenizer(

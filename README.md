@@ -35,3 +35,13 @@ You can download the models from the following link:
 
 - [NPGPT (smiles-gpt)](https://drive.google.com/drive/folders/1olCPouDkaJ2OBdNaM-G7IU8T6fBpvPMy?usp=drive_link)
 - [NPGPT (ChemGPT)](https://drive.google.com/drive/folders/1P7g4x62PDBWQn5GoIbIJBCBHPE84kIOu?usp=drive_link)
+
+
+## Inference
+
+To generate SMILES strings using the trained model, first ensure that you have placed the model checkpoint files in the `checkpoints/smiles-gpt/` directory for the smiles-gpt model. Then run the following command:
+
+```shell
+uv run python src/scripts/inference.py
+```
+
