@@ -45,3 +45,11 @@ To generate SMILES strings using the trained model, first ensure that you have p
 uv run python src/scripts/inference.py
 ```
 
+## Google Colab
+
+We also provide a Google Colab notebook for inference without local installation:
+
+- [NPGPT Inference Notebook](https://colab.research.google.com/drive/1it66xbMEc_T2J2DnDprPMWzI-uRtQVHb?usp=sharing)
+
+This notebook allows you to generate SMILES strings using our pre-trained models directly in your browser.
+
