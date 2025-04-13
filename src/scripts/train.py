@@ -1,6 +1,7 @@
 import pytorch_lightning as pl
-from npgpt import ClmDataModule, SmilesGptModel, SmilesGptTrainingConfig, get_tokenizer
 from pytorch_lightning.loggers import WandbLogger
+
+from npgpt import ClmDataModule, SmilesGptModel, SmilesGptTrainingConfig, get_tokenizer
 
 
 def train(
@@ -8,6 +9,7 @@ def train(
     tokenizer_filename: str,
     dataset_file: str,
     logging: bool = True,
+    checkpoint_dir: str = "checkpoints",
 ):
     tokenizer = get_tokenizer(config, tokenizer_filename)
     model = SmilesGptModel(config, tokenizer)
@@ -33,6 +35,7 @@ def train(
     )
 
     trainer.fit(model, data_module)
+    trainer.save_checkpoint(f"{checkpoint_dir}/model.ckpt")
 
 
 if __name__ == "__main__":
