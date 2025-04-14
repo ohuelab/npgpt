@@ -8,6 +8,7 @@ def generate_smiles(
     model: SmilesGptModel,
     tokenizer,
     config: SmilesGptGenerationConfig,
+    initial_smiles: str | None = None,
 ) -> list[str]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -16,8 +17,17 @@ def generate_smiles(
     generated_smiles = []
     with torch.no_grad():
         for _ in range(config.num_samples):
-            # Start with BOS token
-            input_ids = torch.tensor([[tokenizer.bos_token_id]]).to(device)
+            if initial_smiles is not None:
+                # Tokenize the initial SMILES and add BOS token
+                initial_tokens = tokenizer.encode(
+                    initial_smiles, add_special_tokens=False
+                )
+                input_ids = torch.tensor(
+                    [[tokenizer.bos_token_id] + initial_tokens]
+                ).to(device)
+            else:
+                # Start with BOS token only
+                input_ids = torch.tensor([[tokenizer.bos_token_id]]).to(device)
 
             outputs = model.model.generate(
                 input_ids,
@@ -50,7 +60,10 @@ if __name__ == "__main__":
         strict=False,
     )
 
-    smiles_list = generate_smiles(model, tokenizer, generation_config)
+    initial_smiles = "c1ccccc1"  # benzene ring as initial SMILES
+    smiles_list = generate_smiles(
+        model, tokenizer, generation_config, initial_smiles=initial_smiles
+    )
 
     print("Generated SMILES:")
     for i, smiles in enumerate(smiles_list, 1):
