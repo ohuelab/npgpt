@@ -11,5 +11,6 @@ wheels/
 
 wandb/
 lightning_logs/
-data/
+data
+model
 checkpoints/

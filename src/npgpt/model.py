@@ -37,11 +37,15 @@ class SmilesGptModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         input_ids = batch
         outputs = self.forward(input_ids)
+        if outputs.loss is not None:
+            self.log("train_loss", outputs.loss)
         return outputs
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch
         outputs = self.forward(input_ids)
+        if outputs.loss is not None:
+            self.log("val_loss", outputs.loss, sync_dist=True)
         return outputs
 
     def configure_optimizers(self):

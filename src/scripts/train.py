@@ -1,3 +1,5 @@
+import argparse
+
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
@@ -39,8 +41,34 @@ def train(
 
 
 if __name__ == "__main__":
-    config = SmilesGptTrainingConfig(batch_size=128)
-    tokenizer_filename = "externals/smiles-gpt/checkpoints/benchmark-10m/tokenizer.json"
-    dataset_file = "data/coconut.smi"
+    parser = argparse.ArgumentParser(description="Train a SmilesGptModel.")
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="data/coconut.smi",
+        help="Path to the dataset file.",
+    )
+    parser.add_argument(
+        "--tokenizer",
+        type=str,
+        default="externals/smiles-gpt/checkpoints/benchmark-10m/tokenizer.json",
+        help="Path to the tokenizer file.",
+    )
+    parser.add_argument(
+        "--checkpoint_dir",
+        type=str,
+        default="checkpoints",
+        help="Path to the checkpoint directory.",
+    )
 
-    train(config, tokenizer_filename, dataset_file, logging=False)
+    args = parser.parse_args()
+
+    config = SmilesGptTrainingConfig(batch_size=128)
+
+    train(
+        config,
+        args.tokenizer,
+        args.dataset,
+        checkpoint_dir=args.checkpoint_dir,
+        logging=True,
+    )

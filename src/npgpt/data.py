@@ -12,7 +12,13 @@ class ClmDataset(Dataset):
         self.max_length = max_length
 
         with open(file_path, "r") as f:
-            self.data = f.read().splitlines()
+            lines = f.read().splitlines()
+            self.data = []
+            for line in lines:
+                parts = line.split()
+                if len(parts) == 0:
+                    continue
+                self.data.append(parts[0])
 
     def __len__(self):
         return len(self.data)
