@@ -6,7 +6,7 @@ class SmilesGptTrainingConfig(BaseModel):
     project_name: str | None = "npgpt"
 
     accelerator: str = "gpu"
-    devices: int | list[int] = 1
+    devices: int | str | list[int] = "auto"
     strategy: str = "ddp"
 
     batch_size: int = 256
