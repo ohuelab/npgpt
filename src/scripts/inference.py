@@ -68,6 +68,12 @@ if __name__ == "__main__":
         help="Path to the tokenizer file.",
     )
     parser.add_argument(
+        "--use_hf_tokenizer",
+        type=bool,
+        default=False,
+        help="Whether to use a HuggingFace tokenizer.",
+    )
+    parser.add_argument(
         "--checkpoint",
         type=str,
         default="checkpoints/smiles-gpt/model.ckpt",
@@ -105,13 +111,22 @@ if __name__ == "__main__":
         num_samples=args.num_samples,
     )
 
-    tokenizer = get_tokenizer(training_config, args.tokenizer)
+    tokenizer = get_tokenizer(training_config, args.tokenizer, args.use_hf_tokenizer)
+
     model = SmilesGptModel.load_from_checkpoint(
         args.checkpoint,
         config=training_config,
         tokenizer=tokenizer,
         strict=False,
     )
+
+    if (
+        args.use_hf_tokenizer
+        and "SmilesTokenizer_PubChem_1M" in args.tokenizer
+    ):
+        tokenizer.bos_token_id = 12
+        tokenizer.eos_token_id = 13
+        tokenizer.pad_token_id = 0
 
     smiles_list = generate_smiles(
         model,

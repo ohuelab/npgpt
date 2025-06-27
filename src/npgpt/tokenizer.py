@@ -37,7 +37,14 @@ def train_tokenizer(
 def get_tokenizer(
     config: SmilesGptTrainingConfig,
     tokenizer_filename: str = "tokenizer.json",
+    from_hf: bool = False,
 ) -> PreTrainedTokenizerFast:
+    if from_hf:
+        tokenizer = PreTrainedTokenizerFast.from_pretrained(tokenizer_filename)
+        tokenizer.bos_token_id = 12
+        tokenizer.eos_token_id = 13
+        tokenizer.pad_token_id = 0
+        return tokenizer
     return SMILESBPETokenizer.get_hf_tokenizer(
         tokenizer_filename, model_max_length=config.max_length
     )
