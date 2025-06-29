@@ -1,5 +1,10 @@
+import os
+from pathlib import Path
+
 from pytorch_lightning import LightningDataModule
+from rdkit import Chem
 from torch.utils.data import DataLoader, Dataset, random_split
+from tqdm import tqdm
 from transformers import DataCollatorForLanguageModeling, PreTrainedTokenizerFast
 
 
@@ -43,6 +48,7 @@ class ClmDataModule(LightningDataModule):
         batch_size: int = 32,
         num_workers: int = 4,
         max_length: int = 512,
+        canonical: bool = False,
     ):
         super().__init__()
         self.file_path = file_path
@@ -51,10 +57,52 @@ class ClmDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.max_length = max_length
+        self.canonical = canonical
         self.collate_fn = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
+    def _get_canonical_file_path(self) -> str:
+        path = Path(self.file_path)
+        canonical_path = path.parent / f"{path.stem}_canonical{path.suffix}"
+        return str(canonical_path)
+
+    def _create_canonical_dataset(self) -> str:
+        canonical_path = self._get_canonical_file_path()
+
+        if os.path.exists(canonical_path):
+            print(f"Canonical file already exists: {canonical_path}")
+            return canonical_path
+
+        print(f"Creating canonical SMILES file: {canonical_path}")
+
+        with open(self.file_path, "r") as f:
+            total_lines = sum(1 for line in f if line.strip())
+
+        with open(self.file_path, "r") as f_in, open(canonical_path, "w") as f_out:
+            for line in tqdm(f_in, total=total_lines, desc="Processing SMILES"):
+                parts = line.strip().split()
+                if len(parts) == 0:
+                    continue
+
+                smiles = parts[0]
+                try:
+                    mol = Chem.MolFromSmiles(smiles)
+                    if mol is not None:
+                        canonical_smiles = Chem.MolToSmiles(mol, canonical=True)
+                        f_out.write(canonical_smiles + "\n")
+                    else:
+                        print(f"Warning: Invalid SMILES skipped: {smiles}")
+                except Exception as e:
+                    print(f"Warning: Error processing SMILES {smiles}: {e}")
+
+        return canonical_path
+
     def setup(self, stage=None):
-        dataset = ClmDataset(self.file_path, self.tokenizer, self.max_length)
+        if self.canonical:
+            dataset_path = self._create_canonical_dataset()
+        else:
+            dataset_path = self.file_path
+
+        dataset = ClmDataset(dataset_path, self.tokenizer, self.max_length)
         self.train_dataset, self.val_dataset = random_split(
             dataset, [self.train_ratio, 1 - self.train_ratio]
         )

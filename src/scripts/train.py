@@ -14,9 +14,9 @@ def train(
     logging: bool = True,
     checkpoint_dir: str = "checkpoints",
     pretrained_model_path: str | None = None,
+    canonical: bool = False,
 ):
     tokenizer = get_tokenizer(config, tokenizer_filename, from_hf)
-
 
     model = SmilesGptModel(config, tokenizer)
     data_module = ClmDataModule(
@@ -26,6 +26,7 @@ def train(
         batch_size=config.batch_size,
         num_workers=config.num_workers,
         max_length=config.max_length,
+        canonical=canonical,
     )
 
     if logging:
@@ -82,6 +83,11 @@ if __name__ == "__main__":
         default=30,
         help="Number of epochs to train for.",
     )
+    parser.add_argument(
+        "--canonical",
+        action="store_true",
+        help="Convert SMILES to canonical form before training.",
+    )
 
     args = parser.parse_args()
 
@@ -98,4 +104,5 @@ if __name__ == "__main__":
         checkpoint_dir=args.checkpoint_dir,
         logging=True,
         pretrained_model_path=args.pretrained_model_path,
+        canonical=args.canonical,
     )

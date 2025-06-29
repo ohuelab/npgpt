@@ -3,6 +3,7 @@ import math
 import os
 
 import torch
+from rdkit import Chem
 from tqdm import tqdm
 from transformers import PreTrainedTokenizerFast
 
@@ -16,6 +17,7 @@ def generate_smiles(
     config: SmilesGptGenerationConfig,
     initial_smiles: str | None = None,
     batch_size: int = 1000,
+    canonical: bool = False,
 ) -> list[str]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -29,8 +31,17 @@ def generate_smiles(
                 batch_size, config.num_samples - batch_idx * batch_size
             )
             if initial_smiles is not None:
+                smiles_to_encode = initial_smiles
+                if canonical:
+                    try:
+                        mol = Chem.MolFromSmiles(initial_smiles)
+                        if mol is not None:
+                            smiles_to_encode = Chem.MolToSmiles(mol, canonical=True)
+                    except Exception:
+                        pass
+
                 initial_tokens = tokenizer.encode(
-                    initial_smiles, add_special_tokens=False
+                    smiles_to_encode, add_special_tokens=False
                 )
                 input_ids = torch.tensor(
                     [[tokenizer.bos_token_id] + initial_tokens] * current_batch_size
@@ -52,7 +63,23 @@ def generate_smiles(
             )
 
             smiles_list = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-            generated_smiles.extend(smiles_list)
+
+            if canonical:
+                canonical_smiles = []
+                for smiles in smiles_list:
+                    try:
+                        mol = Chem.MolFromSmiles(smiles)
+                        if mol is not None:
+                            canonical_smiles.append(
+                                Chem.MolToSmiles(mol, canonical=True)
+                            )
+                        else:
+                            canonical_smiles.append(smiles)
+                    except Exception:
+                        canonical_smiles.append(smiles)
+                generated_smiles.extend(canonical_smiles)
+            else:
+                generated_smiles.extend(smiles_list)
 
     return generated_smiles
 
@@ -103,6 +130,11 @@ if __name__ == "__main__":
         default="generated_smiles.smi",
         help="Path to save generated SMILES (as .smi file).",
     )
+    parser.add_argument(
+        "--canonical",
+        action="store_true",
+        help="Convert generated SMILES to canonical form.",
+    )
 
     args = parser.parse_args()
 
@@ -120,10 +152,7 @@ if __name__ == "__main__":
         strict=False,
     )
 
-    if (
-        args.use_hf_tokenizer
-        and "SmilesTokenizer_PubChem_1M" in args.tokenizer
-    ):
+    if args.use_hf_tokenizer and "SmilesTokenizer_PubChem_1M" in args.tokenizer:
         tokenizer.bos_token_id = 12
         tokenizer.eos_token_id = 13
         tokenizer.pad_token_id = 0
@@ -134,6 +163,7 @@ if __name__ == "__main__":
         generation_config,
         initial_smiles=args.initial_smiles,
         batch_size=args.batch_size,
+        canonical=args.canonical,
     )
 
     output_path = args.output
