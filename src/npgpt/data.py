@@ -10,11 +10,16 @@ from transformers import DataCollatorForLanguageModeling, PreTrainedTokenizerFas
 
 class ClmDataset(Dataset):
     def __init__(
-        self, file_path: str, tokenizer: PreTrainedTokenizerFast, max_length: int = 512
+        self,
+        file_path: str,
+        tokenizer: PreTrainedTokenizerFast,
+        max_length: int = 512,
+        randomize: bool = False,
     ):
         self.file_path = file_path
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.randomize = randomize
 
         with open(file_path, "r") as f:
             lines = f.read().splitlines()
@@ -28,9 +33,26 @@ class ClmDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+    def _randomize_smiles(self, smiles: str) -> str:
+        try:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                return smiles
+
+            randomized = Chem.MolToSmiles(mol, doRandom=True, canonical=False)
+            return randomized
+        except Exception as e:
+            print(f"Warning: Error randomizing SMILES {smiles}: {e}")
+            return smiles
+
     def __getitem__(self, idx):
+        smiles = self.data[idx]
+
+        if self.randomize:
+            smiles = self._randomize_smiles(smiles)
+
         encoded = self.tokenizer(
-            self.data[idx],
+            smiles,
             max_length=self.max_length,
             truncation=True,
             padding="max_length",
@@ -49,6 +71,7 @@ class ClmDataModule(LightningDataModule):
         num_workers: int = 4,
         max_length: int = 512,
         canonical: bool = False,
+        randomize: bool = False,
     ):
         super().__init__()
         self.file_path = file_path
@@ -58,6 +81,7 @@ class ClmDataModule(LightningDataModule):
         self.num_workers = num_workers
         self.max_length = max_length
         self.canonical = canonical
+        self.randomize = randomize
         self.collate_fn = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
     def _get_canonical_file_path(self) -> str:
@@ -102,7 +126,9 @@ class ClmDataModule(LightningDataModule):
         else:
             dataset_path = self.file_path
 
-        dataset = ClmDataset(dataset_path, self.tokenizer, self.max_length)
+        dataset = ClmDataset(
+            dataset_path, self.tokenizer, self.max_length, randomize=self.randomize
+        )
         self.train_dataset, self.val_dataset = random_split(
             dataset, [self.train_ratio, 1 - self.train_ratio]
         )

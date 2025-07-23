@@ -15,6 +15,7 @@ def train(
     checkpoint_dir: str = "checkpoints",
     pretrained_model_path: str | None = None,
     canonical: bool = False,
+    randomize: bool = False,
 ):
     tokenizer = get_tokenizer(config, tokenizer_filename, from_hf)
 
@@ -27,6 +28,7 @@ def train(
         num_workers=config.num_workers,
         max_length=config.max_length,
         canonical=canonical,
+        randomize=randomize,
     )
 
     if logging:
@@ -88,6 +90,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Convert SMILES to canonical form before training.",
     )
+    parser.add_argument(
+        "--randomize",
+        action="store_true",
+        help="Randomize SMILES strings during training for better robustness.",
+    )
 
     args = parser.parse_args()
 
@@ -105,4 +112,5 @@ if __name__ == "__main__":
         logging=True,
         pretrained_model_path=args.pretrained_model_path,
         canonical=args.canonical,
+        randomize=args.randomize,
     )
