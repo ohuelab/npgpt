@@ -4,6 +4,8 @@ from transformers import GPT2Config, GPT2LMHeadModel, PreTrainedTokenizerFast
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
 from npgpt.config import SmilesGptTrainingConfig
+from npgpt.chiral_utils import get_chiral_token_groups
+from npgpt.loss import create_chiral_aware_loss
 
 
 class SmilesGptModel(pl.LightningModule):
@@ -26,6 +28,21 @@ class SmilesGptModel(pl.LightningModule):
             n_ctx=config.max_length,
         )
         self.model = GPT2LMHeadModel(gpt2_config)
+        
+        # Initialize chiral token groups and loss module
+        if config.enable_chiral_unlikelihood or config.chiral_loss_weight != 1.0:
+            self.single_at_tokens, self.double_at_tokens = get_chiral_token_groups(tokenizer)
+        else:
+            self.single_at_tokens, self.double_at_tokens = set(), set()
+        
+        # Create chiral-aware loss module
+        self.chiral_loss_fn = create_chiral_aware_loss(
+            single_at_tokens=self.single_at_tokens,
+            double_at_tokens=self.double_at_tokens,
+            chiral_loss_weight=config.chiral_loss_weight,
+            enable_chiral_unlikelihood=config.enable_chiral_unlikelihood,
+            chiral_unlikelihood_weight=config.chiral_unlikelihood_weight,
+        )
 
     def forward(
         self, data: dict[str, torch.Tensor]
@@ -36,17 +53,47 @@ class SmilesGptModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         input_ids = batch
+        labels = input_ids.get("labels", input_ids.get("input_ids"))
+        if labels is None:
+            labels = input_ids["input_ids"]
+        
+        # Forward pass to get logits
         outputs = self.forward(input_ids)
-        if outputs.loss is not None:
-            self.log("train_loss", outputs.loss)
-        return outputs
+        
+        # Compute chiral-aware loss
+        loss_dict = self.chiral_loss_fn(outputs.logits, labels, return_dict=True)
+        
+        # Log all losses
+        self.log("train_loss", loss_dict["loss"])
+        self.log("train_causal_lm_loss", loss_dict["causal_lm_loss"])
+        
+        if self.config.enable_chiral_unlikelihood:
+            self.log("train_chiral_loss", loss_dict["chiral_loss"])
+            self.log("train_weighted_chiral_loss", loss_dict["weighted_chiral_loss"])
+        
+        return {"loss": loss_dict["loss"]}
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch
+        labels = input_ids.get("labels", input_ids.get("input_ids"))
+        if labels is None:
+            labels = input_ids["input_ids"]
+        
+        # Forward pass to get logits
         outputs = self.forward(input_ids)
-        if outputs.loss is not None:
-            self.log("val_loss", outputs.loss, sync_dist=True)
-        return outputs
+        
+        # Compute chiral-aware loss
+        loss_dict = self.chiral_loss_fn(outputs.logits, labels, return_dict=True)
+        
+        # Log all losses
+        self.log("val_loss", loss_dict["loss"], sync_dist=True)
+        self.log("val_causal_lm_loss", loss_dict["causal_lm_loss"], sync_dist=True)
+        
+        if self.config.enable_chiral_unlikelihood:
+            self.log("val_chiral_loss", loss_dict["chiral_loss"], sync_dist=True)
+            self.log("val_weighted_chiral_loss", loss_dict["weighted_chiral_loss"], sync_dist=True)
+        
+        return {"loss": loss_dict["loss"]}
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(  # type: ignore

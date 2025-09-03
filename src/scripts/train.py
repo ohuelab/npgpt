@@ -95,12 +95,32 @@ if __name__ == "__main__":
         action="store_true",
         help="Randomize SMILES strings during training for better robustness.",
     )
+    parser.add_argument(
+        "--enable_chiral_unlikelihood",
+        action="store_true",
+        help="Enable chiral unlikelihood training for improved stereochemistry prediction.",
+    )
+    parser.add_argument(
+        "--chiral_unlikelihood_weight",
+        type=float,
+        default=0.1,
+        help="Weight for chiral unlikelihood loss (default: 0.1).",
+    )
+    parser.add_argument(
+        "--chiral_loss_weight",
+        type=float,
+        default=1.0,
+        help="Weight multiplier for chiral token losses (default: 1.0, e.g., 1.5 for 1.5x weighting).",
+    )
 
     args = parser.parse_args()
 
     config = SmilesGptTrainingConfig(
         batch_size=128,
         max_epochs=args.epochs,
+        enable_chiral_unlikelihood=args.enable_chiral_unlikelihood,
+        chiral_unlikelihood_weight=args.chiral_unlikelihood_weight,
+        chiral_loss_weight=args.chiral_loss_weight,
     )
 
     train(
