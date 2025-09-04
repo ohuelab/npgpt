@@ -27,11 +27,11 @@ class SmilesGptTrainingConfig(BaseModel):
     n_layer: int = 6
     n_head: int = 12
     n_embd: int = 12 * 48
-    
+
     # Chiral Unlikelihood Training settings
     enable_chiral_unlikelihood: bool = False
     chiral_unlikelihood_weight: float = 0.1
-    
+
     # Chiral token loss weighting
     chiral_loss_weight: float = 1.0  # Weight multiplier for chiral token losses
 

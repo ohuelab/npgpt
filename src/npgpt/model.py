@@ -28,13 +28,15 @@ class SmilesGptModel(pl.LightningModule):
             n_ctx=config.max_length,
         )
         self.model = GPT2LMHeadModel(gpt2_config)
-        
+
         # Initialize chiral token groups and loss module
         if config.enable_chiral_unlikelihood or config.chiral_loss_weight != 1.0:
-            self.single_at_tokens, self.double_at_tokens = get_chiral_token_groups(tokenizer)
+            self.single_at_tokens, self.double_at_tokens = get_chiral_token_groups(
+                tokenizer
+            )
         else:
             self.single_at_tokens, self.double_at_tokens = set(), set()
-        
+
         # Create chiral-aware loss module
         self.chiral_loss_fn = create_chiral_aware_loss(
             single_at_tokens=self.single_at_tokens,
@@ -56,21 +58,21 @@ class SmilesGptModel(pl.LightningModule):
         labels = input_ids.get("labels", input_ids.get("input_ids"))
         if labels is None:
             labels = input_ids["input_ids"]
-        
+
         # Forward pass to get logits
         outputs = self.forward(input_ids)
-        
+
         # Compute chiral-aware loss
         loss_dict = self.chiral_loss_fn(outputs.logits, labels, return_dict=True)
-        
+
         # Log all losses
         self.log("train_loss", loss_dict["loss"])
         self.log("train_causal_lm_loss", loss_dict["causal_lm_loss"])
-        
+
         if self.config.enable_chiral_unlikelihood:
             self.log("train_chiral_loss", loss_dict["chiral_loss"])
             self.log("train_weighted_chiral_loss", loss_dict["weighted_chiral_loss"])
-        
+
         return {"loss": loss_dict["loss"]}
 
     def validation_step(self, batch, batch_idx):
@@ -78,21 +80,25 @@ class SmilesGptModel(pl.LightningModule):
         labels = input_ids.get("labels", input_ids.get("input_ids"))
         if labels is None:
             labels = input_ids["input_ids"]
-        
+
         # Forward pass to get logits
         outputs = self.forward(input_ids)
-        
+
         # Compute chiral-aware loss
         loss_dict = self.chiral_loss_fn(outputs.logits, labels, return_dict=True)
-        
+
         # Log all losses
         self.log("val_loss", loss_dict["loss"], sync_dist=True)
         self.log("val_causal_lm_loss", loss_dict["causal_lm_loss"], sync_dist=True)
-        
+
         if self.config.enable_chiral_unlikelihood:
             self.log("val_chiral_loss", loss_dict["chiral_loss"], sync_dist=True)
-            self.log("val_weighted_chiral_loss", loss_dict["weighted_chiral_loss"], sync_dist=True)
-        
+            self.log(
+                "val_weighted_chiral_loss",
+                loss_dict["weighted_chiral_loss"],
+                sync_dist=True,
+            )
+
         return {"loss": loss_dict["loss"]}
 
     def configure_optimizers(self):
